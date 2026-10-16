@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Blender Script Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="glass-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">✦</span>
+                <h1>Blender Script AI</h1>
+            </div>
+            <button class="key-btn" id="keyBtn">
+                <span class="key-icon">🔑</span> API Key
+            </button>
+        </header>
+
+        <!-- API Key Panel -->
+        <div class="key-panel" id="keyPanel">
+            <label>Nhập OpenAI API Key (lưu trong browser, không gửi lên server)</label>
+            <input type="password" id="apiKeyInput" placeholder="sk-...">
+            <button id="saveKeyBtn">Lưu</button>
+            <p class="hint">Key được lưu tại localStorage của trình duyệt bạn. Không có backend nào nhận được key này.</p>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area" id="chatArea">
+            <div class="message ai-message">
+                <div class="avatar">✦</div>
+                <div class="bubble">
+                    <p>Xin chào! Mô tả mô hình 3D bạn muốn tạo, tôi sẽ sinh script Blender Python cho bạn.</p>
+                    <p class="example">Ví dụ: "Tạo một chiếc bàn gỗ 4 chân, mặt bàn 2x1m, cao 0.75m"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="input-area">
+            <textarea id="promptInput" placeholder="Mô tả mô hình 3D bạn muốn tạo..." rows="3"></textarea>
+            <div class="input-actions">
+                <select id="modelSelect">
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-4o-mini">GPT-4o Mini</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                </select>
+                <button id="sendBtn" class="send-btn">
+                    <span>Tạo Script</span>
+                    <span class="arrow">→</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Output Panel -->
+        <div class="output-panel" id="outputPanel">
+            <div class="output-header">
+                <h3>📜 Script Blender</h3>
+                <div class="output-actions">
+                    <button id="copyBtn">📋 Sao chép</button>
+                    <button id="downloadBtn">💾 Tải xuống</button>
+                </div>
+            </div>
+            <pre><code id="scriptOutput">Script sẽ xuất hiện ở đây...</code></pre>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
