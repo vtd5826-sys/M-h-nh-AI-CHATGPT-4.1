@@ -1,73 +1,767 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Blender Script Generator</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AI Code Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Space Grotesk', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+:root {
+    --bg: #0a0e1a;
+    --glass: rgba(18, 24, 41, 0.75);
+    --border: rgba(255, 255, 255, 0.08);
+    --teal: #14b8a6;
+    --teal-glow: rgba(20, 184, 166, 0.4);
+    --gold: #f59e0b;
+    --text: #e8ecf1;
+    --text-dim: #8892a4;
+}
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    background-image:
+        radial-gradient(ellipse at 20% 0%, rgba(20, 184, 166, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(245, 158, 11, 0.1) 0%, transparent 50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+}
+
+.app {
+    width: 100%;
+    max-width: 900px;
+    height: 100%;
+    max-height: 100vh;
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    box-shadow: 0 0 80px rgba(20, 184, 166, 0.1), 0 25px 50px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.logo { display: flex; align-items: center; gap: 10px; min-width: 0; }
+
+.logo-icon {
+    font-size: 22px;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+    flex-shrink: 0;
+}
+
+.logo h1 {
+    font-size: 1.05em;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--teal), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.icon-btn {
+    background: rgba(20, 184, 166, 0.1);
+    border: 1px solid rgba(20, 184, 166, 0.3);
+    color: var(--teal);
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.icon-btn:hover, .icon-btn:active { background: rgba(20, 184, 166, 0.25); }
+
+/* KEY MODAL */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal {
+    background: #121829;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 0 60px rgba(20, 184, 166, 0.2);
+}
+
+.modal h2 { color: var(--gold); margin-bottom: 8px; font-size: 1.1em; }
+
+.modal p {
+    font-size: 0.82em;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+.modal a { color: var(--teal); }
+
+.modal input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 0.9em;
+    outline: none;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.modal input:focus { border-color: var(--teal); }
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.modal-actions button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-family: inherit;
+    transition: all 0.3s;
+}
+
+.btn-primary { background: var(--teal); color: #0a0e1a; }
+.btn-primary:active { transform: scale(0.97); }
+.btn-secondary { background: rgba(255,255,255,0.08); color: var(--text); }
+
+/* CHAT */
+.chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-behavior: smooth;
+}
+
+.chat::-webkit-scrollbar { width: 5px; }
+.chat::-webkit-scrollbar-thumb { background: rgba(20, 184, 166, 0.3); border-radius: 3px; }
+
+.msg {
+    display: flex;
+    gap: 10px;
+    max-width: 90%;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.msg.user { align-self: flex-end; flex-direction: row-reverse; }
+.msg.ai { align-self: flex-start; }
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.msg.ai .avatar {
+    background: linear-gradient(135deg, var(--teal), #0d9488);
+    color: white;
+    box-shadow: 0 0 16px var(--teal-glow);
+}
+
+.msg.user .avatar {
+    background: linear-gradient(135deg, var(--gold), #d97706);
+    color: #0a0e1a;
+}
+
+.bubble {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    padding: 12px 15px;
+    border-radius: 14px;
+    font-size: 0.88em;
+    line-height: 1.6;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.msg.user .bubble {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+.bubble pre {
+    background: #0d1117;
+    padding: 12px;
+    border-radius: 8px;
+    margin: 8px 0;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    font-size: 0.85em;
+}
+
+.bubble code {
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: #7ee787;
+    font-size: 0.92em;
+    white-space: pre;
+}
+
+.bubble p { margin: 4px 0; }
+.bubble p:first-child { margin-top: 0; }
+.bubble p:last-child { margin-bottom: 0; }
+
+.copy-code-btn {
+    background: rgba(20, 184, 166, 0.15);
+    border: 1px solid rgba(20, 184, 166, 0.3);
+    color: var(--teal);
+    padding: 5px 12px;
+    border-radius: 7px;
+    font-size: 0.78em;
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.copy-code-btn:active { background: rgba(20, 184, 166, 0.3); }
+
+.typing {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.typing span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+    animation: bounce 1.2s infinite;
+}
+
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* INPUT AREA */
+.input-area {
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.input-box {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 8px 8px 8px 14px;
+    transition: border-color 0.3s;
+}
+
+.input-box:focus-within {
+    border-color: var(--teal);
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.15);
+}
+
+.input-box textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 0.9em;
+    resize: none;
+    outline: none;
+    max-height: 120px;
+    min-height: 24px;
+    line-height: 1.5;
+    font-family: inherit;
+    padding: 4px 0;
+}
+
+.input-box textarea::placeholder { color: var(--text-dim); }
+
+.send-btn {
+    background: linear-gradient(135deg, var(--teal), #0d9488);
+    color: white;
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+
+.send-btn:active:not(:disabled) { transform: scale(0.92); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.hints {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+
+.hints::-webkit-scrollbar { display: none; }
+
+.hint-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.hint-chip:active {
+    background: rgba(20, 184, 166, 0.15);
+    color: var(--teal);
+    border-color: rgba(20, 184, 166, 0.3);
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+    body { padding: 0; }
+    .app { border-radius: 0; max-height: 100vh; height: 100vh; }
+    .header { padding: 12px 14px; }
+    .logo h1 { font-size: 0.95em; }
+    .chat { padding: 12px; }
+    .bubble { font-size: 0.85em; padding: 10px 12px; }
+    .input-area { padding: 10px 12px 12px; }
+    .msg { max-width: 95%; }
+}
+</style>
 </head>
 <body>
-    <div class="glass-container">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <span class="logo-icon">✦</span>
-                <h1>Blender Script AI</h1>
-            </div>
-            <button class="key-btn" id="keyBtn">
-                <span class="key-icon">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</span> API Key
-            </button>
-        </header>
 
-        <!-- API Key Panel -->
-        <div class="key-panel" id="keyPanel">
-            <label>Nhập OpenAI API Key (lưu trong browser, không gửi lên server)</label>
-            <input type="password" id="apiKeyInput" placeholder="sk-...">
-            <button id="saveKeyBtn">Lưu</button>
-            <p class="hint">Key được lưu tại localStorage của trình duyệt bạn. Không có backend nào nhận được key này.</p>
+<div class="app">
+    <div class="header">
+        <div class="logo">
+            <span class="logo-icon">✦</span>
+            <h1>AI Code Generator</h1>
         </div>
-
-        <!-- Chat Area -->
-        <div class="chat-area" id="chatArea">
-            <div class="message ai-message">
-                <div class="avatar">✦</div>
-                <div class="bubble">
-                    <p>Xin chào! Mô tả mô hình 3D bạn muốn tạo, tôi sẽ sinh script Blender Python cho bạn.</p>
-                    <p class="example">Ví dụ: "Tạo một chiếc bàn gỗ 4 chân, mặt bàn 2x1m, cao 0.75m"</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Input Area -->
-        <div class="input-area">
-            <textarea id="promptInput" placeholder="Mô tả mô hình 3D bạn muốn tạo..." rows="3"></textarea>
-            <div class="input-actions">
-                <select id="modelSelect">
-                    <option value="gpt-4o">GPT-4o</option>
-                    <option value="gpt-4o-mini">GPT-4o Mini</option>
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                </select>
-                <button id="sendBtn" class="send-btn">
-                    <span>Tạo Script</span>
-                    <span class="arrow">→</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Output Panel -->
-        <div class="output-panel" id="outputPanel">
-            <div class="output-header">
-                <h3>📜 Script Blender</h3>
-                <div class="output-actions">
-                    <button id="copyBtn">📋 Sao chép</button>
-                    <button id="downloadBtn">💾 Tải xuống</button>
-                </div>
-            </div>
-            <pre><code id="scriptOutput">Script sẽ xuất hiện ở đây...</code></pre>
+        <div class="header-actions">
+            <button class="icon-btn" id="settingsBtn" title="API Key">🔑</button>
+            <button class="icon-btn" id="clearBtn" title="Xóa chat">🗑️</button>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <div class="chat" id="chat"></div>
+
+    <div class="input-area">
+        <div class="input-box">
+            <textarea id="input" rows="1" placeholder="Mô tả code bạn muốn tạo..."></textarea>
+            <button class="send-btn" id="sendBtn">➤</button>
+        </div>
+        <div class="hints">
+            <button class="hint-chip" data-prompt="Tạo cho tôi một trang HTML đẹp có hiệu ứng tuyết rơi">❄️ HTML tuyết rơi</button>
+            <button class="hint-chip" data-prompt="Viết game snake bằng HTML CSS JavaScript chạy được">🐍 Game Snake</button>
+            <button class="hint-chip" data-prompt="Tạo script Blender Python tạo một chiếc bàn gỗ 4 chân">🎨 Blender bàn gỗ</button>
+            <button class="hint-chip" data-prompt="Viết hàm Python tính số Fibonacci bằng đệ quy">🐍 Python Fibonacci</button>
+            <button class="hint-chip" data-prompt="Tạo đồng hồ số bằng HTML CSS JavaScript">⏰ Đồng hồ số</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+    <div class="modal">
+        <h2>🔑 Nhập Gemini API Key</h2>
+        <p>
+            Lấy key <b>miễn phí</b> tại 
+            <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com/app/apikey</a>.
+            Key chỉ lưu trong trình duyệt của bạn, không gửi đi đâu khác.
+        </p>
+        <input type="password" id="keyInput" placeholder="AIza...">
+        <div class="modal-actions">
+            <button class="btn-secondary" id="cancelKey">Hủy</button>
+            <button class="btn-primary" id="saveKey">Lưu</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// STATE
+// ==========================================
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+let isGenerating = false;
+
+const SYSTEM_PROMPT = `Bạn là chuyên gia lập trình. Nhiệm vụ: tạo code hoàn chỉnh theo yêu cầu người dùng.
+
+QUY TẮC BẮT BUỘC:
+1. Trả lời bằng tiếng Việt, ngắn gọn.
+2. Code phải hoàn chỉnh, chạy được ngay, không có placeholder.
+3. Đặt code trong khối markdown \`\`\`language ... \`\`\` để dễ đọc.
+4. Nếu là HTML: gộp tất cả CSS + JS vào 1 file, chạy được bằng cách mở trực tiếp.
+5. Nếu là Python: có import đầy đủ, chạy được ngay.
+6. Nếu là Blender script: bọc trong try/except, dùng bpy, có camera + light + material.
+7. Nếu là JavaScript: code sạch, không lỗi cú pháp.
+8. Không giải thích dài dòng. Chỉ code + 1-2 câu mô tả.
+
+Ví dụ trả lời:
+"Đây là code trang HTML hiệu ứng tuyết rơi:
+
+\`\`\`html
+<!DOCTYPE html>
+...
+\`\`\`
+
+Mở file bằng trình duyệt là chạy được."`;
+
+// ==========================================
+// ELEMENTS
+// ==========================================
+const chat = document.getElementById('chat');
+const input = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+const settingsBtn = document.getElementById('settingsBtn');
+const clearBtn = document.getElementById('clearBtn');
+const modal = document.getElementById('modal');
+const keyInput = document.getElementById('keyInput');
+const saveKeyBtn = document.getElementById('saveKey');
+const cancelKeyBtn = document.getElementById('cancelKey');
+
+// ==========================================
+// API KEY
+// ==========================================
+function getKey() {
+    return localStorage.getItem('gemini_key') || '';
+}
+
+function setKey(k) {
+    localStorage.setItem('gemini_key', k);
+}
+
+settingsBtn.onclick = () => {
+    keyInput.value = getKey();
+    modal.classList.add('active');
+};
+
+cancelKeyBtn.onclick = () => modal.classList.remove('active');
+
+saveKeyBtn.onclick = () => {
+    const k = keyInput.value.trim();
+    if (!k) {
+        alert('Vui lòng nhập key');
+        return;
+    }
+    setKey(k);
+    modal.classList.remove('active');
+    addMsg('ai', '✅ Đã lưu API Key. Bây giờ bạn có thể yêu cầu tạo code.');
+};
+
+// ==========================================
+// CHAT
+// ==========================================
+function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderContent(text) {
+    // Tách code blocks và text thường
+    const parts = [];
+    const regex = /```(\w*)\n?([\s\S]*?)```/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+        }
+        parts.push({ type: 'code', lang: match[1] || 'code', content: match[2].trim() });
+        lastIndex = regex.lastIndex;
+    }
+    if (lastIndex < text.length) {
+        parts.push({ type: 'text', content: text.slice(lastIndex) });
+    }
+
+    let html = '';
+    for (const p of parts) {
+        if (p.type === 'text') {
+            const t = escapeHtml(p.content).trim();
+            if (t) html += `<p>${t.replace(/\n/g, '<br>')}</p>`;
+        } else {
+            const id = 'code_' + Math.random().toString(36).slice(2, 9);
+            html += `<pre><code id="${id}">${escapeHtml(p.content)}</code></pre>`;
+            html += `<button class="copy-code-btn" data-target="${id}">📋 Sao chép code</button>`;
+        }
+    }
+    return html;
+}
+
+function addMsg(role, content, isHtml = false) {
+    const msg = document.createElement('div');
+    msg.className = `msg ${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = role === 'ai' ? '✦' : '👤';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+
+    if (isHtml) {
+        bubble.innerHTML = content;
+    } else {
+        bubble.innerHTML = renderContent(content);
+    }
+
+    msg.appendChild(avatar);
+    msg.appendChild(bubble);
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+
+    // Gắn sự kiện copy cho nút trong bubble
+    bubble.querySelectorAll('.copy-code-btn').forEach(btn => {
+        btn.onclick = () => {
+            const target = document.getElementById(btn.dataset.target);
+            if (target) {
+                navigator.clipboard.writeText(target.textContent).then(() => {
+                    btn.textContent = '✅ Đã chép!';
+                    setTimeout(() => btn.textContent = '📋 Sao chép code', 1800);
+                });
+            }
+        };
+    });
+
+    return msg;
+}
+
+function addTyping() {
+    const msg = document.createElement('div');
+    msg.className = 'msg ai';
+    msg.id = 'typingIndicator';
+    msg.innerHTML = `
+        <div class="avatar">✦</div>
+        <div class="bubble">
+            <div class="typing"><span></span><span></span><span></span></div>
+        </div>
+    `;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+    return msg;
+}
+
+// ==========================================
+// GỌI GEMINI API
+// ==========================================
+async function callGemini(prompt) {
+    const key = getKey();
+    if (!key) {
+        throw new Error('Chưa có API Key. Nhấn nút 🔑 để nhập.');
+    }
+
+    const url = `${GEMINI_URL}?key=${encodeURIComponent(key)}`;
+
+    const body = {
+        system_instruction: {
+            parts: [{ text: SYSTEM_PROMPT }]
+        },
+        contents: [{
+            role: 'user',
+            parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+            temperature: 0.4,
+            maxOutputTokens: 4096,
+            topP: 0.95
+        }
+    };
+
+    let response;
+    try {
+        response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+    } catch (e) {
+        throw new Error('Không kết nối được API. Kiểm tra mạng hoặc thử lại.');
+    }
+
+    if (!response.ok) {
+        let errMsg = `Lỗi ${response.status}`;
+        try {
+            const errData = await response.json();
+            if (errData.error?.message) errMsg = errData.error.message;
+        } catch (_) {}
+        if (response.status === 400) errMsg = 'API Key không hợp lệ hoặc request sai.';
+        if (response.status === 403) errMsg = 'API Key bị từ chối. Kiểm tra lại key.';
+        if (response.status === 429) errMsg = 'Quá nhiều request. Đợi 1 phút rồi thử lại.';
+        throw new Error(errMsg);
+    }
+
+    const data = await response.json();
+
+    if (!data.candidates || !data.candidates[0]) {
+        throw new Error('API không trả về kết quả. Thử lại với câu hỏi khác.');
+    }
+
+    const candidate = data.candidates[0];
+    if (!candidate.content?.parts?.[0]?.text) {
+        if (candidate.finishReason === 'SAFETY') {
+            throw new Error('Nội dung bị chặn bởi bộ lọc an toàn. Thử mô tả khác.');
+        }
+        throw new Error('Không có nội dung trả về.');
+    }
+
+    return candidate.content.parts[0].text;
+}
+
+// ==========================================
+// GỬI
+// ==========================================
+async function send() {
+    const text = input.value.trim();
+    if (!text || isGenerating) return;
+
+    if (!getKey()) {
+        modal.classList.add('active');
+        return;
+    }
+
+    addMsg('user', text);
+    input.value = '';
+    input.style.height = 'auto';
+
+    isGenerating = true;
+    sendBtn.disabled = true;
+
+    const typingEl = addTyping();
+
+    try {
+        const reply = await callGemini(text);
+        typingEl.remove();
+        addMsg('ai', reply);
+    } catch (err) {
+        typingEl.remove();
+        addMsg('ai', `❌ **Lỗi:** ${err.message}`);
+    } finally {
+        isGenerating = false;
+        sendBtn.disabled = false;
+        input.focus();
+    }
+}
+
+sendBtn.onclick = send;
+
+input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        send();
+    }
+});
+
+// Auto resize textarea
+input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+});
+
+// Hint chips
+document.querySelectorAll('.hint-chip').forEach(chip => {
+    chip.onclick = () => {
+        input.value = chip.dataset.prompt;
+        input.focus();
+        input.style.height = 'auto';
+        input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    };
+});
+
+// Clear chat
+clearBtn.onclick = () => {
+    if (confirm('Xóa toàn bộ cuộc trò chuyện?')) {
+        chat.innerHTML = '';
+        addMsg('ai', 'Đã xóa. Bắt đầu cuộc trò chuyện mới!');
+    }
+};
+
+// ==========================================
+// KHỞI ĐỘNG
+// ==========================================
+window.addEventListener('load', () => {
+    if (!getKey()) {
+        modal.classList.add('active');
+    } else {
+        addMsg('ai', 'Xin chào! Tôi có thể tạo code HTML, Python, JavaScript, C#, Blender script và nhiều thứ khác. Bạn muốn gì?');
+    }
+});
+
+// Đóng modal khi click ngoài
+modal.addEventListener('click', (e) => {
+    if (e.target === modal && getKey()) {
+        modal.classList.remove('active');
+    }
+});
+</script>
 </body>
 </html>
